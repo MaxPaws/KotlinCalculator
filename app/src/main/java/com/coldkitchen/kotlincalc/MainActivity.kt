@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.Toast
 import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.ArithmeticException
 
@@ -33,13 +34,24 @@ class MainActivity : AppCompatActivity() {
             tvInput.append(".")
             lastNumeric = false
             lastDot = true
-        }
+    }
     }
 
     fun onOperator(view: View){
         if(lastNumeric && !isOperatorAdded(tvInput.text.toString())){
             tvInput.append((view as Button).text)
+            lastDot = false
         }
+         else if((view as Button).text == "-" && !isOperatorAdded(tvInput.text.toString())){
+            tvInput.text = view.text
+            lastDot = false
+        }
+    }
+
+    private fun removeZero(result: String) : String{
+        var value = result
+        if(result.endsWith(".0")) value = result.substring(0, value.length - 2)
+        return value
     }
 
     fun onEqual(view: View){
@@ -53,46 +65,48 @@ class MainActivity : AppCompatActivity() {
                     valueFromTv = valueFromTv.substring(1)
                 }
 
-                if(valueFromTv.contains("-")){
-                    //Split string by operator:
-                    val splitValue = valueFromTv.split("-")
-                    var first = splitValue[0]
-                    var second = splitValue[1]
-                    //Getting back minus if first number had it before:
-                    if(!prefix.isEmpty()) first = prefix + first
-                    //Sending result to the output:
-                    tvInput.text = (first.toDouble() - second.toDouble()).toString()
-                } else
-                    if(valueFromTv.contains("+")) {
+                when {
+                    valueFromTv.contains("-") -> {
                         //Split string by operator:
                         val splitValue = valueFromTv.split("-")
                         var first = splitValue[0]
-                        var second = splitValue[1]
+                        val second = splitValue[1]
+                        //Getting back minus if first number had it before:
+                        if(!prefix.isEmpty()) first = prefix + first
+                        //Sending result to the output:
+                        tvInput.text = removeZero((first.toDouble() - second.toDouble()).toString())
+                    }
+                    valueFromTv.contains("+") -> {
+                        //Split string by operator:
+                        val splitValue = valueFromTv.split("+")
+                        var first = splitValue[0]
+                        val second = splitValue[1]
                         //Getting back minus if first number had it before:
                         if (!prefix.isEmpty()) first = prefix + first
                         //Sending result to the output:
                         tvInput.text = (first.toDouble() + second.toDouble()).toString()
-                } else
-                    if(valueFromTv.contains("*")) {
+                    }
+                    valueFromTv.contains("*") -> {
                         //Split string by operator:
-                        val splitValue = valueFromTv.split("-")
+                        val splitValue = valueFromTv.split("*")
                         var first = splitValue[0]
-                        var second = splitValue[1]
+                        val second = splitValue[1]
                         //Getting back minus if first number had it before:
                         if (!prefix.isEmpty()) first = prefix + first
                         //Sending result to the output:
                         tvInput.text = (first.toDouble() * second.toDouble()).toString()
-                } else
-                    if(valueFromTv.contains("/")) {
+                    }
+                    valueFromTv.contains("/") -> {
                         //Split string by operator:
-                        val splitValue = valueFromTv.split("-")
+                        val splitValue = valueFromTv.split("/")
                         var first = splitValue[0]
-                        var second = splitValue[1]
+                        val second = splitValue[1]
                         //Getting back minus if first number had it before:
                         if (!prefix.isEmpty()) first = prefix + first
                         //Sending result to the output:
                         tvInput.text = (first.toDouble() / second.toDouble()).toString()
                     }
+                }
 
                         } catch (e : ArithmeticException){
                 e.printStackTrace()
@@ -101,11 +115,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun isOperatorAdded(value: String) : Boolean{
-        return if (value.startsWith("-")){
-            false
-        } else {
-            value.contains("/") || value.contains("*")
-                    || value.contains("-") || value.contains("+")
-        }
+        var result = value
+            if (value.startsWith("-"))
+                result = value.substring(1)
+
+        return result.contains("+") || result.contains("-") || result.contains("*")
+                || result.contains("/")
     }
 }
